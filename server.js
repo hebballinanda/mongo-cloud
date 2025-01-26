@@ -2,13 +2,16 @@ const express = require('express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 
-dotenv.config();  // Load environment variables from .env file
+dotenv.config(); // Load environment variables from .env file
 
 const app = express();
 const port = 5000;
 
 // Middleware to parse incoming JSON requests
 app.use(express.json());
+
+// Set EJS as the template engine
+app.set('view engine', 'ejs');
 
 // Connect to MongoDB using the connection string in .env
 mongoose.connect(process.env.MONGO_URI, {
@@ -24,11 +27,11 @@ const Item = mongoose.model('Item', new mongoose.Schema({
   price: Number,
 }));
 
-// Route 1: GET request to fetch all items
-app.get('/items', async (req, res) => {
+// Route 1: GET request to fetch all items and render EJS
+app.get('/', async (req, res) => {
   try {
-    const items = await Item.find();  // Fetch all items from the database
-    res.json(items);  // Send them as a response
+    const items = await Item.find(); // Fetch all items from the database
+    res.render('post', { items }); // Pass the items to the EJS file
   } catch (err) {
     res.status(500).send('Error fetching items');
   }
@@ -36,11 +39,11 @@ app.get('/items', async (req, res) => {
 
 // Route 2: POST request to add a new item
 app.post('/items', async (req, res) => {
-  const { name, price } = req.body;  // Get item data from the request body
+  const { name, price } = req.body; // Get item data from the request body
   try {
-    const newItem = new Item({ name, price });  // Create a new item
-    await newItem.save();  // Save it to the database
-    res.status(201).json(newItem);  // Respond with the new item
+    const newItem = new Item({ name, price }); // Create a new item
+    await newItem.save(); // Save it to the database
+    res.status(201).json(newItem); // Respond with the new item
   } catch (err) {
     res.status(500).send('Error adding item');
   }
